@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+samples/raw/
+.firebase/
+*.pyc
+.DS_Store

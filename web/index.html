@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ShelfSense</title>
+  <meta name="description" content="ShelfSense turns a store's existing CCTV into a price tag for every shelf.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><path d='M8 22h16M8 16h16M8 10h16' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-cartesian-dist-min@2.35.2/plotly-cartesian.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M8 22h16M8 16h16M8 10h16"/></svg></span>
+      <div>
+        <h1>ShelfSense</h1>
+        <p class="muted" id="storeName">Loading store…</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="overview" class="active">Overview</button>
+      <button role="tab" data-tab="floor">Floor map</button>
+      <button role="tab" data-tab="pricing">Shelf pricing</button>
+      <button role="tab" data-tab="live">Live analysis</button>
+      <button role="tab" data-tab="ask">Ask ShelfSense</button>
+    </nav>
+    <label class="audience">Brand audience
+      <select id="audience">
+        <option value="generic">Generic (all shoppers)</option>
+        <option value="18-35">Ages 18–35</option>
+        <option value="35-55">Ages 35–55</option>
+        <option value="families">Families</option>
+        <option value="55+">Ages 55+</option>
+      </select>
+    </label>
+  </header>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="tab-overview" class="tab active">
+      <div class="kpis" id="kpis"></div>
+      <div class="grid2">
+        <article class="card">
+          <div class="card-head">
+            <h2>This week, by Gemini</h2>
+            <button class="ghost" id="refreshSummary">Regenerate</button>
+          </div>
+          <div id="summary" class="summary muted">No summary yet. Click Regenerate.</div>
+          <p class="fine" id="summaryMeta"></p>
+        </article>
+        <article class="card">
+          <h2>Top shelves by Shelf Value Index</h2>
+          <div id="topChart" class="chart"></div>
+        </article>
+      </div>
+      <article class="card">
+        <h2>When shoppers come — store footfall by hour</h2>
+        <div id="storeHeat" class="chart tall"></div>
+      </article>
+      <p class="fine" id="provenance"></p>
+    </section>
+
+    <!-- FLOOR -->
+    <section id="tab-floor" class="tab">
+      <div class="grid-floor">
+        <article class="card">
+          <div class="card-head">
+            <h2>Floor heatmap</h2>
+            <label>Colour by
+              <select id="floorMetric">
+                <option value="svi">Shelf Value Index</option>
+                <option value="F">Footfall / hour</option>
+                <option value="S">Stop rate</option>
+                <option value="R">Reach rate</option>
+                <option value="D">Median dwell</option>
+              </select>
+            </label>
+          </div>
+          <svg id="floor" viewBox="0 0 100 60" role="img" aria-label="Store floor plan coloured by metric"></svg>
+          <div class="legend" id="floorLegend"></div>
+          <p class="fine">Click a shelf to see its detail. Camera views are mapped to shelf zones; no faces or identities are stored.</p>
+        </article>
+        <article class="card" id="unitDetail">
+          <h2>Select a shelf</h2>
+          <p class="muted">Pick any shelf on the floor plan.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="tab-pricing" class="tab">
+      <article class="card">
+        <div class="card-head">
+          <h2>Shelf ranking &amp; suggested monthly rent</h2>
+          <button class="ghost" id="csv">Export CSV</button>
+        </div>
+        <p class="muted small" id="pricingNote"></p>
+        <div class="table-wrap"><table id="rank"></table></div>
+        <p class="fine">SVI = 100 × (0.40·Footfall + 0.25·Stop rate + 0.20·Reach rate + 0.15·Dwell) × AudienceFit, each input robust-normalised within the store (P5–P95). Price = base rate × SVI ÷ store median SVI, floor 40% of base.</p>
+      </article>
+    </section>
+
+    <!-- LIVE -->
+    <section id="tab-live" class="tab">
+      <div class="cams" id="cams"></div>
+      <div class="grid-live">
+        <article class="card">
+          <div class="card-head">
+            <h2 id="camTitle">Camera</h2>
+            <span class="pill" id="camStatus">ready</span>
+          </div>
+          <video id="player" controls muted playsinline loop></video>
+          <div class="actions">
+            <button class="primary" id="runSample">Analyse this clip with Gemini</button>
+            <label class="ghost upload">Upload your own clip
+              <input type="file" id="upload" accept="video/mp4,video/quicktime,video/webm" hidden>
+            </label>
+          </div>
+          <p class="fine">Clips are sent to Gemini on Vertex AI via Cloud Run. Uploaded video is deleted right after analysis; only anonymous counts are written to Firestore. Max 30 MB.</p>
+        </article>
+        <article class="card" id="analysis">
+          <h2>Gemini analysis</h2>
+          <p class="muted">Run an analysis to see per-zone footfall, stops, reaches, dwell and age bands, plus a timestamped event log.</p>
+        </article>
+      </div>
+      <article class="card">
+        <h2>Recent analyses</h2>
+        <div id="history" class="history muted">Loading…</div>
+      </article>
+    </section>
+
+    <!-- ASK -->
+    <section id="tab-ask" class="tab">
+      <article class="card chat">
+        <h2>Ask ShelfSense</h2>
+        <p class="muted small">Gemini answers from this store's Firestore data and cites shelf ids.</p>
+        <div class="suggest" id="suggest"></div>
+        <div class="log" id="log" aria-live="polite"></div>
+        <form id="askForm" class="ask">
+          <input id="q" autocomplete="off" placeholder="e.g. Which shelf reaches the most 18–35 shoppers on weekend evenings?" maxlength="500">
+          <button class="primary">Ask</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>ShelfSense prototype · Firebase Hosting · Cloud Run · Firestore · Gemini</span>
+    <span class="fine">Store history is simulated for the demo; rows marked “live” come from Gemini video analysis.</span>
+  </footer>
+</body>
+</html>

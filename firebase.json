@@ -1,0 +1,17 @@
+{
+  "hosting": {
+    "public": "web",
+    "ignore": ["**/.*"],
+    "rewrites": [
+      { "source": "/api/**", "run": { "serviceId": "shelfsense-api", "region": "us-central1" } }
+    ],
+    "headers": [
+      { "source": "**/*.@(js|css)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] },
+      { "source": "clips/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
