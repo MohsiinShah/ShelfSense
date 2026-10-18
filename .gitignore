@@ -7,3 +7,4 @@ samples/raw/
 video/raw/
 video/node_modules
 video/*.mp4
+video/timeline.json
