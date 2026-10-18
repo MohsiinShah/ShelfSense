@@ -32,11 +32,15 @@ function md(text) {
   let h = esc(text)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\[([A-Z0-9-]+)\]/g, (m, id) => units.has(id) ? `<span class="cite" data-unit="${id}">${id}</span>` : m);
-  const lines = h.split("\n");
-  if (lines.filter((l) => /^\s*[-*•] /.test(l)).length >= 2) {
-    return "<ul>" + lines.filter((l) => l.trim()).map((l) => "<li>" + l.replace(/^\s*[-*•] /, "") + "</li>").join("") + "</ul>";
+  // Group consecutive bullet lines into lists; everything else is a paragraph.
+  let out = "", inList = false;
+  for (const line of h.split("\n")) {
+    const m = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (m) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${m[1]}</li>`; continue; }
+    if (inList) { out += "</ul>"; inList = false; }
+    if (line.trim()) out += `<p>${line}</p>`;
   }
-  return h;
+  return out + (inList ? "</ul>" : "");
 }
 
 // Sequential colour ramp (colour-blind safe, teal family) for SVI and metrics.

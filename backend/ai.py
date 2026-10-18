@@ -9,7 +9,9 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3-flash-preview")
+# Gemini 3 thinks by default; low keeps video and chat latency demo-friendly.
+THINKING = types.ThinkingConfig(thinking_level="low") if MODEL.startswith("gemini-3") else None
 _client: genai.Client | None = None
 
 
@@ -96,6 +98,7 @@ def analyze_video(gcs_uri: str, camera: dict) -> tuple[dict, dict]:
             response_mime_type="application/json",
             response_schema=VideoAnalysis,
             temperature=0.1,
+            thinking_config=THINKING,
             media_resolution=types.MediaResolution.MEDIA_RESOLUTION_MEDIUM,
         ),
     )
@@ -115,8 +118,8 @@ def analyze_video(gcs_uri: str, camera: dict) -> tuple[dict, dict]:
 
 ASK_SYSTEM = """You are "Ask ShelfSense", an analyst assistant for a retailer and the brands
 that rent its shelf space. Answer ONLY from the JSON data provided. Be concise (max ~120 words),
-lead with the direct answer, cite shelf unit ids in square brackets like [A1-E], and quote the
-numbers you used. SVI is the Shelf Value Index (0-100); price_pkr is the suggested monthly rent.
+lead with the direct answer, cite shelf unit ids in square brackets like [A1-E], and state the
+numbers you used as plain numbers (never wrap numbers in quotation marks; format money as PKR 36,000). SVI is the Shelf Value Index (0-100); price_pkr is the suggested monthly rent.
 If the data cannot answer the question, say what is missing. Never invent numbers.
 Rows with source "seed" are simulated history; rows with source "gemini" come from live video analysis."""
 
@@ -131,7 +134,7 @@ def ask(question: str, context: dict, history: list[dict] | None = None) -> tupl
     resp = client().models.generate_content(
         model=MODEL,
         contents=contents,
-        config=types.GenerateContentConfig(system_instruction=ASK_SYSTEM, temperature=0.2),
+        config=types.GenerateContentConfig(system_instruction=ASK_SYSTEM, temperature=0.2, thinking_config=THINKING),
     )
     return resp.text.strip(), {"model": MODEL, "latency_s": round(time.perf_counter() - t0, 2)}
 
@@ -144,6 +147,6 @@ def weekly_summary(context: dict) -> str:
                   "points (markdown '- '), covering the most valuable shelf, the most under-priced "
                   "opportunity, the peak traffic window, and one concrete layout or pricing action. "
                   "Cite unit ids in [brackets] and use the numbers."],
-        config=types.GenerateContentConfig(system_instruction=ASK_SYSTEM, temperature=0.3),
+        config=types.GenerateContentConfig(system_instruction=ASK_SYSTEM, temperature=0.3, thinking_config=THINKING),
     )
     return resp.text.strip()
