@@ -8,6 +8,16 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const POS = { eye_level: "Eye level", end_cap: "End-cap", bottom: "Bottom shelf", top: "Top shelf", table: "Display table", wall: "Wall chiller" };
 const AGE = { age_lt18: "<18", age_18_35: "18–35", age_35_55: "35–55", age_55p: "55+" };
 const METRIC = { svi: "SVI", F: "Footfall / hr", S: "Stop rate", R: "Reach rate", D: "Median dwell (s)" };
+// 24px stroke icons (Lucide-style paths).
+const ICONS = {
+  people: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+  star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  camera: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+};
+const icon = (name) => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 const fmt = new Intl.NumberFormat("en-PK");
 const pkr = (n) => "PKR " + fmt.format(n);
 const pct = (x) => (x * 100).toFixed(0) + "%";
@@ -68,6 +78,9 @@ const plotCfg = { displayModeBar: false, responsive: true };
 async function loadStore() {
   const s = await api(`/store?audience=${encodeURIComponent(state.audience)}`);
   state.store = s;
+  // Generic ranking is the baseline the brand views are compared against.
+  if (state.audience === "generic") state.base = s.units;
+  else if (!state.base) state.base = (await api("/store?audience=generic")).units;
   $("#storeName").textContent = `${s.store.name} · base rate ${pkr(s.store.base_rate_pkr)}/month`;
   renderKpis(); renderSummary(); renderTop(); renderPricing(); renderFloor();
   if (state.selectedUnit) showUnit(state.selectedUnit);
@@ -80,13 +93,13 @@ function renderKpis() {
   const k = state.store.kpis;
   const top = state.store.units[0];
   const tiles = [
-    ["Shelf visitors (7 d)", fmt.format(k.unit_visitors), "unique passes across 12 shelf zones"],
-    ["Avg dwell", k.avg_dwell_s + " s", "visit-weighted median"],
-    ["Reach rate", pct(k.reach_rate), "visitors who touched a product"],
-    ["Top shelf", k.top_unit, `${top.category} · SVI ${top.svi}`],
-    ["Peak window", k.peak ? `${k.peak.day} ${k.peak.hour}` : "—", "busiest hour of the week"],
+    ["people", "Shelf visitors (7 d)", fmt.format(k.unit_visitors), "unique passes across 12 shelf zones"],
+    ["clock", "Avg dwell", k.avg_dwell_s + " s", "visit-weighted median"],
+    ["hand", "Reach rate", pct(k.reach_rate), "visitors who touched a product"],
+    ["star", "Top shelf", k.top_unit, `${top.category} · SVI ${top.svi}`],
+    ["calendar", "Peak window", k.peak ? `${k.peak.day} ${k.peak.hour}` : "—", "busiest hour of the week"],
   ];
-  $("#kpis").innerHTML = tiles.map(([l, v, s]) => `<div class="kpi"><div class="label">${l}</div><div class="value">${esc(v)}</div><div class="sub">${esc(s)}</div></div>`).join("");
+  $("#kpis").innerHTML = tiles.map(([i, l, v, s]) => `<div class="kpi"><div class="label">${icon(i)}${l}</div><div class="value">${esc(v)}</div><div class="sub">${esc(s)}</div></div>`).join("");
 }
 
 function renderSummary() {
@@ -140,10 +153,14 @@ function renderFloor() {
   const vals = units.map((u) => metricValue(u, m));
   const lo = Math.min(...vals), hi = Math.max(...vals);
   const norm = (v) => (hi - lo ? (v - lo) / (hi - lo) : 0.5);
-  const cams = state.store.cameras;
   const svg = $("#floor");
-  let out = `<rect x="0" y="0" width="100" height="60" fill="none"/>`;
-  out += `<text class="zone-label" x="3" y="57">Entrance ↓</text><text class="zone-label" x="30" y="12.5">Fresh produce hall</text>`;
+  // Store shell: walls, aisle labels, checkout and entrance, then shelves, then cameras on top.
+  let out = `<rect class="shell" x="0.6" y="0.6" width="98.8" height="58.8" rx="2"/>`;
+  out += `<path class="door" d="M4 59.4 H22"/><text class="zone-label" x="13" y="57.4" text-anchor="middle">ENTRANCE</text>`;
+  out += `<text class="zone-label" x="43" y="12.2" text-anchor="middle">FRESH PRODUCE HALL</text>`;
+  for (const [x, label] of [[14, "AISLE 1"], [72, "AISLE 28"], [92.5, "AISLE 6"]]) out += `<text class="zone-label" x="${x}" y="33.6" text-anchor="middle">${label}</text>`;
+  for (const x of [64, 76, 88]) out += `<rect class="till" x="${x}" y="50" width="9" height="3.2" rx="0.6"/>`;
+  out += `<text class="zone-label" x="81" y="56.6" text-anchor="middle">CHECKOUT</text>`;
   for (const u of units) {
     const [x, y, w, h] = u.rect;
     const t = norm(metricValue(u, m));
@@ -156,6 +173,18 @@ function renderFloor() {
     out += vertical
       ? `<text x="${tx}" y="${ty}" fill="${ink}" text-anchor="middle" transform="rotate(-90 ${tx} ${ty})">${esc(u.id)} · ${v}</text></g>`
       : `<text x="${tx}" y="${ty + 0.7}" fill="${ink}" text-anchor="middle">${esc(u.id)} · ${v}</text></g>`;
+  }
+  // Camera positions and the area each one watches (field-of-view wedge).
+  const CAM_POS = { "cam-01": [14, 39, 8, 20, 31], "cam-02": [43, 56.5, 33, 53, 46], "cam-03": [72, 39, 66, 78, 31], "cam-04": [92.5, 39, 87, 98, 31] };
+  for (const c of state.store.cameras) {
+    const p = CAM_POS[c.id];
+    if (!p) continue;
+    const [cx, cy, l, r, top] = p;
+    out += `<g class="cam-pin" data-cam="${c.id}"><title>${esc(c.id)} · ${esc(c.name)} (open live feed)</title>`
+      + `<path class="fov" d="M${cx} ${cy} L${l} ${top} L${r} ${top} Z"/>`
+      + `<circle cx="${cx}" cy="${cy}" r="1.7"/>`
+      // Label on the left when the pin is near the right wall.
+      + (cx > 85 ? `<text x="${cx - 2.4}" y="${cy + 0.7}" text-anchor="end">${esc(c.id)}</text></g>` : `<text x="${cx + 2.4}" y="${cy + 0.7}">${esc(c.id)}</text></g>`);
   }
   svg.innerHTML = out;
   $("#floorLegend").innerHTML = `<span>${METRIC[m]} low</span><span class="ramp" style="background:linear-gradient(90deg,${RAMP.join(",")})"></span><span>high</span>`;
@@ -206,15 +235,28 @@ function renderPricing() {
   const aud = $("#audience").selectedOptions[0].text;
   $("#pricingNote").textContent = state.audience === "generic"
     ? "Generic view: every shopper counts the same. Pick a brand audience above to re-weight by who actually passes each shelf."
-    : `Brand view for “${aud}”: SVI is multiplied by AudienceFit (on-target share vs store average, clipped 0.5–1.5×).`;
-  const head = [["id", "Shelf"], [null, "Category"], [null, "Position"], ["svi", "SVI", 1], ["F", "Footfall/hr", 1], ["S", "Stop", 1], ["R", "Reach", 1], ["D", "Dwell", 1], ["fit", "Fit", 1], ["price", "Rent / month", 1], [null, "Data"]];
+    : `Brand view for “${aud}”: SVI is multiplied by AudienceFit (on-target share vs store average, clipped 0.5–1.5×). ▲▼ show each shelf's move against the generic ranking; small figures under the rent show the change.`;
+  const rank = Object.fromEntries(state.store.units.map((u, i) => [u.id, i + 1]));
+  const base = Object.fromEntries((state.base || []).map((u, i) => [u.id, { rank: i + 1, price: u.price_pkr }]));
+  const brand = state.audience !== "generic";
+  const move = (id) => {
+    if (!brand || !base[id]) return "";
+    const d = base[id].rank - rank[id];
+    return d > 0 ? `<span class="mv up" title="up ${d} vs generic">▲${d}</span>` : d < 0 ? `<span class="mv down" title="down ${-d} vs generic">▼${-d}</span>` : `<span class="mv">–</span>`;
+  };
+  const dprice = (r) => {
+    if (!brand || !base[r.id]) return "";
+    const d = r.price_pkr - base[r.id].price;
+    return d ? `<div class="dp ${d > 0 ? "up" : "down"}">${d > 0 ? "+" : "−"}${fmt.format(Math.abs(d))}</div>` : "";
+  };
+  const head = [[null, "#", 1], ["id", "Shelf"], [null, "Category"], [null, "Position"], ["svi", "SVI", 1], ["F", "Footfall/hr", 1], ["S", "Stop", 1], ["R", "Reach", 1], ["D", "Dwell", 1], ["fit", "Fit", 1], ["price", "Rent / month", 1], [null, "Data"]];
   $("#rank").innerHTML = "<thead><tr>" + head.map(([k, l, n]) => `<th class="${n ? "num" : ""}" ${k ? `data-sort="${k}"` : ""}>${l}${key === k ? (dir < 0 ? " ↓" : " ↑") : ""}</th>`).join("") + "</tr></thead><tbody>" +
     rows.map((r) => `<tr data-unit="${r.id}">
-      <td><strong>${esc(r.id)}</strong></td><td>${esc(r.category)}</td><td>${POS[r.position] || r.position}</td>
+      <td class="num rk">${rank[r.id]}${move(r.id)}</td><td><strong>${esc(r.id)}</strong></td><td>${esc(r.category)}</td><td>${POS[r.position] || r.position}</td>
       <td class="num"><span class="bar" style="width:${Math.max(2, r.svi * 0.6)}px;background:${rampColor(r.svi / 100)}"></span>${r.svi}</td>
       <td class="num">${r.inputs.F.toFixed(1)}</td><td class="num">${pct(r.inputs.S)}</td><td class="num">${pct(r.inputs.R)}</td><td class="num">${r.inputs.D.toFixed(1)} s</td>
       <td class="num ${r.audience_fit > 1.02 ? "fit-up" : r.audience_fit < 0.98 ? "fit-down" : ""}">${r.audience_fit}×</td>
-      <td class="num"><strong>${pkr(r.price_pkr)}</strong></td>
+      <td class="num"><strong>${pkr(r.price_pkr)}</strong>${dprice(r)}</td>
       <td>${r.sources.map((s) => `<span class="tag ${s === "gemini" ? "live" : ""}">${s === "gemini" ? "live" : "sim"}</span>`).join(" ")}</td></tr>`).join("") + "</tbody>";
 }
 
@@ -242,6 +284,41 @@ function selectCam(id) {
   const p = $("#player");
   p.src = `clips/${state.camera.sample}`;
   p.play().catch(() => {});
+  drawZones(null);
+}
+
+// Where each zone sits in the frame, as % of the picture: [left, top, width, height].
+// Zone ids end in -L / -R / -E (aisle cameras) or -FRONT / -MID / -BACK (hall camera).
+const ZONE_BOX = { L: [1, 10, 33, 86], R: [66, 10, 33, 86], E: [36, 16, 28, 38], FRONT: [1, 66, 98, 32], MID: [1, 37, 98, 28], BACK: [1, 8, 98, 28] };
+
+function drawZones(results) {
+  const ov = $("#zoneOv");
+  const byId = Object.fromEntries((results || []).map((z) => [z.zone_id, z]));
+  ov.innerHTML = Object.keys(state.camera.zones).map((id) => {
+    const b = ZONE_BOX[id.split("-").pop()];
+    if (!b) return "";
+    const z = byId[id];
+    const stats = z ? `<b>${z.unique_visitors}</b> visitors · <b>${z.reaches}</b> reaches` : "";
+    return `<div class="zbox${z ? " has" : ""}" data-zone="${id}" style="left:${b[0]}%;top:${b[1]}%;width:${b[2]}%;height:${b[3]}%">
+      <span class="zlabel">${esc(id)}${stats ? `<small>${stats}</small>` : ""}</span></div>`;
+  }).join("");
+  ov.hidden = !$("#showZones").checked;
+  positionZones();
+}
+
+// Fit the overlay to the visible picture (the video is letterboxed with object-fit: contain).
+function positionZones() {
+  const v = $("#player"), ov = $("#zoneOv");
+  if (!v.videoWidth) return;
+  const W = v.clientWidth, H = v.clientHeight, r = v.videoWidth / v.videoHeight;
+  const w = Math.min(W, H * r), h = w / r;
+  Object.assign(ov.style, { left: `${(W - w) / 2}px`, top: `${(H - h) / 2}px`, width: `${w}px`, height: `${h}px` });
+}
+
+function flashZone(id) {
+  const el = $(`#zoneOv [data-zone="${id}"]`);
+  if (!el) return;
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
 }
 
 function setStatus(text, cls = "") {
@@ -262,9 +339,20 @@ async function runAnalysis(file) {
   const t0 = performance.now();
   setStatus("Gemini is watching…", "busy");
   const timer = setInterval(() => setStatus(`Gemini is watching… ${((performance.now() - t0) / 1000).toFixed(0)} s`, "busy"), 500);
-  $("#analysis").innerHTML = `<h2>Gemini analysis</h2><p class="muted"><span class="spinner"></span>Uploading clip to Cloud Run → Gemini on Vertex AI is counting shoppers per shelf zone…</p>`;
+  $("#analysis").innerHTML = `<h2>Gemini analysis</h2>
+    <ol class="steps" id="steps">
+      <li class="active"><span></span>Sending ${file ? "your clip" : "the clip"} to the API on Cloud Run</li>
+      <li><span></span>Gemini 3 Flash is watching and counting shoppers per shelf zone</li>
+      <li><span></span>Saving anonymous counts to Firestore</li>
+    </ol>
+    <p class="fine">Typically 4–8 seconds.</p>`;
+  const steps = $$("#steps li");
+  const stepTo = (n) => steps.forEach((li, i) => { li.className = i < n ? "done" : i === n ? "active" : ""; });
+  setTimeout(() => stepTo(1), 700);
   try {
     const r = await api("/analyze", { method: "POST", body: fd });
+    stepTo(2);
+    await new Promise((ok) => setTimeout(ok, 350));
     renderAnalysis(r);
     setStatus(`done in ${((performance.now() - t0) / 1000).toFixed(1)} s`);
     loadHistory();
@@ -277,6 +365,7 @@ async function runAnalysis(file) {
 
 function renderAnalysis(r) {
   const a = r.analysis, m = r.meta;
+  if (r.camera_id === state.camera.id) drawZones(a.zones);
   $("#analysis").innerHTML = `
     <div class="card-head"><h2>Gemini analysis · ${esc(r.camera_id)}</h2><span class="tag live">written to Firestore</span></div>
     <p class="small">${esc(a.scene)} <strong>${a.people_total}</strong> people in view.</p>
@@ -286,7 +375,7 @@ function renderAnalysis(r) {
         <dt>Dwell p50</dt><dd>${z.dwell_p50_s}s</dd><dt>18–35</dt><dd>${z.age_bands.age_18_35}</dd></dl>
         <p>${esc(z.notes)}</p></div>`).join("")}</div>
     <h2>Event log <span class="fine">click to jump</span></h2>
-    <div class="events">${a.events.map((e) => `<button data-t="${e.t_s}"><span class="t">${e.t_s.toFixed(1)}s</span><span><strong>${esc(e.zone_id)}</strong> · ${esc(e.kind)} — ${esc(e.description)}</span></button>`).join("") || '<p class="muted">No events.</p>'}</div>
+    <div class="events">${a.events.map((e) => `<button data-t="${e.t_s}" data-zone="${esc(e.zone_id)}"><span class="t">${e.t_s.toFixed(1)}s</span><span><strong>${esc(e.zone_id)}</strong> · ${esc(e.kind)} — ${esc(e.description)}</span></button>`).join("") || '<p class="muted">No events.</p>'}</div>
     <div class="meta"><span class="tag">${esc(m.model)}</span><span class="tag">${m.latency_s}s model latency</span>
       ${m.input_tokens ? `<span class="tag">${fmt.format(m.input_tokens)} in / ${fmt.format(m.output_tokens)} out tokens</span>` : ""}
       <span class="tag">quality: ${esc(a.data_quality)}</span></div>`;
@@ -299,7 +388,7 @@ async function loadHistory() {
     $("#history").innerHTML = rows.length ? rows.map((r) => `<div class="row"><span class="tag">${new Date(r.created_at).toLocaleString()}</span><strong>${esc(r.camera_id)}</strong>
       <span>${r.analysis.people_total} people · ${r.analysis.zones.map((z) => `${esc(z.zone_id)}: ${z.unique_visitors} visitors / ${z.reaches} reaches`).join(" · ")}</span>
       <span class="fine" style="margin:0">${esc(r.meta.model)} · ${r.meta.latency_s}s · ${esc(r.source)}</span></div>`).join("") : "No analyses yet — run one above.";
-    $$("#history .row").forEach((el, i) => el.addEventListener("click", () => renderAnalysis(rows[i])));
+    $$("#history .row").forEach((el, i) => el.addEventListener("click", () => { if (rows[i].camera_id !== state.camera.id) selectCam(rows[i].camera_id); renderAnalysis(rows[i]); }));
   } catch (e) { $("#history").textContent = e.message; }
 }
 
@@ -312,6 +401,7 @@ const SUGGESTED = [
 ];
 
 function addMsg(role, html, meta = "") {
+  $("#chatEmpty")?.remove();
   const el = document.createElement("div");
   el.className = "msg " + (role === "user" ? "user" : "bot");
   el.innerHTML = html + (meta ? `<div class="fine">${esc(meta)}</div>` : "");
@@ -347,7 +437,14 @@ function wire() {
   }));
   $("#audience").addEventListener("change", (e) => { state.audience = e.target.value; loadStore(); });
   $("#floorMetric").addEventListener("change", renderFloor);
-  $("#floor").addEventListener("click", (e) => { const id = e.target.dataset?.unit; if (id) showUnit(id); });
+  $("#floor").addEventListener("click", (e) => {
+    const pin = e.target.closest(".cam-pin");
+    if (pin) { $('[data-tab="live"]').click(); selectCam(pin.dataset.cam); return; }
+    const id = e.target.dataset?.unit; if (id) showUnit(id);
+  });
+  $("#showZones").addEventListener("change", (e) => { $("#zoneOv").hidden = !e.target.checked; });
+  $("#player").addEventListener("loadedmetadata", positionZones);
+  window.addEventListener("resize", positionZones);
   $("#rank").addEventListener("click", (e) => {
     const th = e.target.closest("th[data-sort]");
     if (th) {
@@ -370,7 +467,7 @@ function wire() {
   $("#upload").addEventListener("change", (e) => { if (e.target.files[0]) runAnalysis(e.target.files[0]); e.target.value = ""; });
   $("#analysis").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-t]");
-    if (b) { const p = $("#player"); p.currentTime = +b.dataset.t; p.play().catch(() => {}); }
+    if (b) { const p = $("#player"); p.currentTime = +b.dataset.t; p.play().catch(() => {}); flashZone(b.dataset.zone); }
   });
   $("#suggest").innerHTML = SUGGESTED.map((s) => `<button class="ghost">${esc(s)}</button>`).join("");
   $("#suggest").addEventListener("click", (e) => { if (e.target.tagName === "BUTTON") ask(e.target.textContent); });
@@ -379,8 +476,19 @@ function wire() {
   if (hash) $(`[data-tab="${hash}"]`)?.click();
 }
 
+async function loadHealth() {
+  try {
+    const h = await api("/health");
+    const el = $("#live");
+    el.querySelector("span").textContent = "Live · " + h.model.replace(/^gemini-/, "Gemini ").replace(/-preview$/, "").replace(/-/g, " ").replace(/\bflash\b/, "Flash");
+    el.title = `API on Cloud Run is up · model ${h.model}`;
+    el.hidden = false;
+  } catch {}
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   wire();
+  loadHealth();
   try {
     await loadStore();
     loadHistory();

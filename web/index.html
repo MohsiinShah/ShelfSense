@@ -17,7 +17,7 @@
     <div class="brand">
       <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M8 22h16M8 16h16M8 10h16"/></svg></span>
       <div>
-        <h1>ShelfSense</h1>
+        <h1>ShelfSense <span class="live" id="live" hidden><i></i><span>Live</span></span></h1>
         <p class="muted" id="storeName">Loading store…</p>
       </div>
     </div>
@@ -113,12 +113,16 @@
             <h2 id="camTitle">Camera</h2>
             <span class="pill" id="camStatus">ready</span>
           </div>
-          <video id="player" controls muted playsinline loop></video>
+          <div class="stage" id="stage">
+            <video id="player" controls muted playsinline loop></video>
+            <div class="zone-ov" id="zoneOv" aria-hidden="true"></div>
+          </div>
           <div class="actions">
             <button class="primary" id="runSample">Analyse this clip with Gemini</button>
             <label class="ghost upload">Upload your own clip
               <input type="file" id="upload" accept="video/mp4,video/quicktime,video/webm" hidden>
             </label>
+            <label class="toggle"><input type="checkbox" id="showZones" checked> Shelf zones</label>
           </div>
           <p class="fine">Clips are sent to Gemini on Vertex AI via Cloud Run. Uploaded video is deleted right after analysis; only anonymous counts are written to Firestore. Max 30 MB.</p>
         </article>
@@ -139,7 +143,13 @@
         <h2>Ask ShelfSense</h2>
         <p class="muted small">Gemini answers from this store's Firestore data and cites shelf ids.</p>
         <div class="suggest" id="suggest"></div>
-        <div class="log" id="log" aria-live="polite"></div>
+        <div class="log" id="log" aria-live="polite">
+          <div class="empty" id="chatEmpty">
+            <span class="empty-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M8 22h16M8 16h16M8 10h16"/></svg></span>
+            <p><strong>Ask anything about this store's shelves.</strong></p>
+            <p class="muted small">Answers come from live Firestore data: SVI, prices, footfall by hour, audience mix and recent Gemini video analyses.</p>
+          </div>
+        </div>
         <form id="askForm" class="ask">
           <input id="q" autocomplete="off" placeholder="e.g. Which shelf reaches the most 18–35 shoppers on weekend evenings?" maxlength="500">
           <button class="primary">Ask</button>
