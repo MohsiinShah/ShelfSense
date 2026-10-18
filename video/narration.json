@@ -1,0 +1,57 @@
+[
+ {
+  "id": "s00_title",
+  "text": "This is ShelfSense: A I that turns a store's existing C C T V cameras into a price tag for every shelf. Built on Firebase, Firestore, Cloud Run, and Gemini.",
+  "dur": 12.16
+ },
+ {
+  "id": "s01_problem",
+  "text": "Brands pay retailers for end-caps, eye-level slots, and promotional bays. But today, that space is priced by position and negotiation, not by how many shoppers actually see it. A shelf passed by two thousand people a day can cost the same as one passed by two hundred. ShelfSense measures the difference.",
+  "dur": 19.36
+ },
+ {
+  "id": "s02_overview",
+  "text": "This is the store dashboard, served from Firebase Hosting. Across twelve shelf zones and four cameras, we see a week of shelf visitors, dwell time, and reach rate. Gemini reads the week's data from Firestore and writes the manager's summary: the most valuable shelf, the most under-priced one, the peak window, and one action to take. Footfall by hour shows the Friday-to-Sunday evening rush.",
+  "dur": 23.28
+ },
+ {
+  "id": "s03_live",
+  "text": "Here's the core of it: live video understanding. I pick the produce hall camera and send the clip to our A P I on Cloud Run. It passes the video to Gemini 3 Flash on Vertex A I, with a description of each shelf zone and a strict J SON schema.",
+  "dur": 17.36
+ },
+ {
+  "id": "s04_results",
+  "text": "In a few seconds, Gemini returns, for every zone, unique visitors, stops, reaches, median dwell, and approximate age bands, plus a timestamped event log. Click an event, and the video jumps to that moment. Only these anonymous counts are written to Firestore. Uploaded video is deleted straight after analysis, and Gemini is instructed never to identify anyone.",
+  "dur": 23.64
+ },
+ {
+  "id": "s05_floor",
+  "text": "Those counts feed the Shelf Value Index. On the floor map, every shelf is coloured by its score. Open the promo end-cap in aisle one. Footfall per hour, stop rate, reach rate, and dwell are each normalised within the store, and weighted forty, twenty-five, twenty, and fifteen percent. The heatmap and audience mix show when, and who.",
+  "dur": 23.52
+ },
+ {
+  "id": "s06_pricing",
+  "text": "The pricing table turns the index into rent: the base rate, times the shelf's score over the store median. Now switch to a brand's view, say, a brand targeting eighteen to thirty-five year olds. Audience fit re-weights every shelf by who actually walks past it, and the nappies shelf in aisle twenty-eight climbs the ranking, because its shoppers are young parents.",
+  "dur": 21.12
+ },
+ {
+  "id": "s07_ask",
+  "text": "Finally, Ask ShelfSense. Retailers and brands ask questions in plain language, and Gemini answers only from this store's Firestore data.",
+  "dur": 9.48
+ },
+ {
+  "id": "s08_answer",
+  "text": "It recommends specific shelves, with the rent and the audience numbers behind them, and every shelf it cites links straight back to the floor map.",
+  "dur": 9.64
+ },
+ {
+  "id": "s09_arch",
+  "text": "Under the hood: Firebase Hosting serves the dashboard. Cloud Run runs the A P I. Gemini on Vertex A I handles vision and reasoning. And Firestore is the system of record, locked to the A P I by security rules. In production, detection moves to an in-store edge box, so only counts ever leave the building.",
+  "dur": 19.88
+ },
+ {
+  "id": "s10_close",
+  "text": "ShelfSense. Price shelf space by attention, not guesswork. Thank you.",
+  "dur": 5.68
+ }
+]

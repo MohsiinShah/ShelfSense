@@ -1,0 +1,50 @@
+{
+ "video": "/Users/mac/Documents/My Projects/ShelfSense/video/raw/page@d206fc5d18f0dd239f0b1c4f8ef070ff.webm",
+ "end": 206.854,
+ "segments": [
+  {
+   "id": "s00_title",
+   "start": 3.01
+  },
+  {
+   "id": "s01_problem",
+   "start": 19.82
+  },
+  {
+   "id": "s02_overview",
+   "start": 39.79
+  },
+  {
+   "id": "s03_live",
+   "start": 63.95
+  },
+  {
+   "id": "s04_results",
+   "start": 81.92
+  },
+  {
+   "id": "s05_floor",
+   "start": 106.23
+  },
+  {
+   "id": "s06_pricing",
+   "start": 130.36
+  },
+  {
+   "id": "s07_ask",
+   "start": 152.19
+  },
+  {
+   "id": "s08_answer",
+   "start": 162.31
+  },
+  {
+   "id": "s09_arch",
+   "start": 173.49
+  },
+  {
+   "id": "s10_close",
+   "start": 194.39
+  }
+ ]
+}

@@ -31,16 +31,18 @@ function md(text) {
   const units = new Set((state.store?.units || []).map((u) => u.id));
   let h = esc(text)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[([A-Z0-9-]+)\]/g, (m, id) => units.has(id) ? `<span class="cite" data-unit="${id}">${id}</span>` : m);
+    // Link every known shelf id, bracketed or not.
+    .replace(/\[?\b([A-Z][A-Z0-9]*-[A-Z]+)\b\]?/g, (m, id) => units.has(id) ? `<span class="cite" data-unit="${id}">${id}</span>` : m);
   // Group consecutive bullet lines into lists; everything else is a paragraph.
-  let out = "", inList = false;
+  let out = "", list = null;
   for (const line of h.split("\n")) {
-    const m = line.match(/^\s*[-*•]\s+(.*)$/);
-    if (m) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${m[1]}</li>`; continue; }
-    if (inList) { out += "</ul>"; inList = false; }
+    const m = line.match(/^\s*(?:([-*•])|\d+[.)])\s+(.*)$/);
+    const kind = m ? (m[1] ? "ul" : "ol") : null;
+    if (list && kind !== list) { out += `</${list}>`; list = null; }
+    if (kind) { if (!list) { out += `<${kind}>`; list = kind; } out += `<li>${m[2]}</li>`; continue; }
     if (line.trim()) out += `<p>${line}</p>`;
   }
-  return out + (inList ? "</ul>" : "");
+  return out + (list ? `</${list}>` : "");
 }
 
 // Sequential colour ramp (colour-blind safe, teal family) for SVI and metrics.

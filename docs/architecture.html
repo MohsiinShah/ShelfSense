@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>ShelfSense architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #fff; font-family: Inter, system-ui, sans-serif; color: #0f172a; }
+  .wrap { width: 1600px; height: 900px; box-sizing: border-box; padding: 48px 56px; }
+  h1 { margin: 0 0 4px; font-size: 34px; letter-spacing: -.02em; }
+  p.sub { margin: 0 0 26px; color: #5b6474; font-size: 18px; }
+  svg text { font-family: Inter, system-ui, sans-serif; }
+</style></head>
+<body><div class="wrap">
+<h1>ShelfSense architecture</h1>
+<p class="sub">Store camera clip → Cloud Run → Gemini on Vertex AI → Firestore → Firebase-hosted dashboard and AI assistant</p>
+<svg width="1488" height="720" viewBox="0 0 1488 720">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f766e"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#0f766e"/></marker>
+    <filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity=".08"/></filter>
+  </defs>
+  <style>
+    .box { fill: #fff; stroke: #d6dde4; stroke-width: 1.5; filter: url(#s); }
+    .gcp { fill: #f0fdfa; stroke: #99d8cc; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .t { font-size: 21px; font-weight: 700; }
+    .d { font-size: 15.5px; fill: #5b6474; }
+    .tag { font-size: 13px; font-weight: 600; fill: #0f766e; letter-spacing: .06em; }
+    .ln { stroke: #0f766e; stroke-width: 2.5; fill: none; marker-end: url(#a); }
+    .ln2 { stroke: #0f766e; stroke-width: 2.5; fill: none; marker-end: url(#a); marker-start: url(#b); }
+    .lbl { font-size: 14px; fill: #0f766e; font-weight: 600; }
+  </style>
+
+  <!-- Store edge -->
+  <rect class="box" x="0" y="250" width="250" height="210" rx="16"/>
+  <text class="tag" x="22" y="285">STORE</text>
+  <text class="t" x="22" y="318">Existing CCTV</text>
+  <text class="d" x="22" y="348">Overhead aisle cameras</text>
+  <text class="d" x="22" y="372">Clip upload or sample feed</text>
+  <text class="d" x="22" y="396">Zones mapped per camera</text>
+  <text class="d" x="22" y="430">No faces stored</text>
+
+  <!-- GCP boundary -->
+  <rect class="gcp" x="300" y="0" width="1188" height="720" rx="22"/>
+  <text class="tag" x="324" y="32">GOOGLE CLOUD · FIREBASE</text>
+
+  <!-- Cloud Run -->
+  <rect class="box" x="340" y="220" width="320" height="270" rx="16"/>
+  <text class="tag" x="362" y="255">CLOUD RUN</text>
+  <text class="t" x="362" y="288">ShelfSense API</text>
+  <text class="d" x="362" y="318">FastAPI · Python 3.12 · container</text>
+  <text class="d" x="362" y="348">/analyze  video → zone metrics</text>
+  <text class="d" x="362" y="372">/store  SVI + price engine</text>
+  <text class="d" x="362" y="396">/ask  grounded Q&amp;A</text>
+  <text class="d" x="362" y="420">/summary  weekly insight</text>
+  <text class="d" x="362" y="456">Autoscaling 1–5 · service account</text>
+
+  <!-- Cloud Storage -->
+  <rect class="box" x="340" y="560" width="320" height="120" rx="16"/>
+  <text class="tag" x="362" y="595">CLOUD STORAGE</text>
+  <text class="t" x="362" y="626">Video bucket</text>
+  <text class="d" x="362" y="654">Uploads deleted after analysis</text>
+
+  <!-- Gemini -->
+  <rect class="box" x="760" y="60" width="330" height="200" rx="16"/>
+  <text class="tag" x="782" y="95">VERTEX AI</text>
+  <text class="t" x="782" y="128">Gemini 3 Flash</text>
+  <text class="d" x="782" y="158">Video understanding: per-zone</text>
+  <text class="d" x="782" y="182">visitors, stops, reaches, dwell,</text>
+  <text class="d" x="782" y="206">age bands, timestamped events</text>
+  <text class="d" x="782" y="236">Structured JSON output (schema)</text>
+
+  <!-- Firestore -->
+  <rect class="box" x="760" y="420" width="330" height="230" rx="16"/>
+  <text class="tag" x="782" y="455">FIRESTORE</text>
+  <text class="t" x="782" y="488">Store data</text>
+  <text class="d" x="782" y="518">stores / units / cameras</text>
+  <text class="d" x="782" y="542">hourly buckets (seed + live)</text>
+  <text class="d" x="782" y="566">analyses · questions · summary</text>
+  <text class="d" x="782" y="600">Client access denied by rules;</text>
+  <text class="d" x="782" y="624">API is the only writer</text>
+
+  <!-- Hosting -->
+  <rect class="box" x="1150" y="220" width="300" height="270" rx="16"/>
+  <text class="tag" x="1172" y="255">FIREBASE HOSTING</text>
+  <text class="t" x="1172" y="288">Dashboard</text>
+  <text class="d" x="1172" y="318">Overview · KPIs · AI summary</text>
+  <text class="d" x="1172" y="342">Floor heatmap · unit detail</text>
+  <text class="d" x="1172" y="366">Shelf pricing · CSV export</text>
+  <text class="d" x="1172" y="390">Live Gemini analysis</text>
+  <text class="d" x="1172" y="414">Ask ShelfSense chat</text>
+  <text class="d" x="1172" y="456">/api/** rewrite → Cloud Run</text>
+
+  <!-- Users -->
+  <rect class="box" x="1150" y="560" width="300" height="120" rx="16"/>
+  <text class="tag" x="1172" y="595">USERS</text>
+  <text class="t" x="1172" y="626">Retailers &amp; brands</text>
+  <text class="d" x="1172" y="654">Price, plan, prove placement</text>
+
+  <!-- arrows -->
+  <path class="ln" d="M250 355 H332"/>
+  <text class="lbl" x="258" y="343">clip</text>
+  <path class="ln" d="M500 490 V552"/>
+  <text class="lbl" x="490" y="528" text-anchor="end">gs:// video</text>
+  <path class="ln2" d="M668 250 L752 196"/>
+  <text class="lbl" x="740" y="184" text-anchor="end">video + zones ⇄ JSON</text>
+  <path class="ln2" d="M668 460 L752 514"/>
+  <text class="lbl" x="742" y="530" text-anchor="end">read / write</text>
+  <path class="ln" d="M1142 355 H668" />
+  <text class="lbl" x="880" y="345">HTTPS /api</text>
+  <path class="ln" d="M1300 560 V498"/>
+</svg>
+</div></body></html>
