@@ -1,0 +1,252 @@
+{
+ "video": {
+  "cam-01": [
+   {
+    "wall_s": 4.69,
+    "model_s": 3.42,
+    "in_tok": 2156,
+    "out_tok": 486,
+    "people": 3,
+    "zone_visitors": [
+     1,
+     1,
+     1
+    ],
+    "events": 3,
+    "quality": "poor, the entire video is extremely out of focus, making it "
+   },
+   {
+    "wall_s": 5.16,
+    "model_s": 4.43,
+    "in_tok": 2156,
+    "out_tok": 506,
+    "people": 2,
+    "zone_visitors": [
+     1,
+     1,
+     1
+    ],
+    "events": 4,
+    "quality": "poor, the video is extremely blurry and out of focus through"
+   },
+   {
+    "wall_s": 4.22,
+    "model_s": 3.45,
+    "in_tok": 2156,
+    "out_tok": 455,
+    "people": 2,
+    "zone_visitors": [
+     1,
+     1,
+     0
+    ],
+    "events": 2,
+    "quality": "poor, the entire video is extremely out of focus, making it "
+   }
+  ],
+  "cam-02": [
+   {
+    "wall_s": 7.28,
+    "model_s": 6.48,
+    "in_tok": 1887,
+    "out_tok": 1114,
+    "people": 18,
+    "zone_visitors": [
+     6,
+     12,
+     5
+    ],
+    "events": 10,
+    "quality": "good; clear visibility of all zones despite high crowd densi"
+   },
+   {
+    "wall_s": 6.2,
+    "model_s": 4.51,
+    "in_tok": 1887,
+    "out_tok": 626,
+    "people": 18,
+    "zone_visitors": [
+     4,
+     9,
+     5
+    ],
+    "events": 8,
+    "quality": "good"
+   },
+   {
+    "wall_s": 5.42,
+    "model_s": 4.59,
+    "in_tok": 1887,
+    "out_tok": 690,
+    "people": 18,
+    "zone_visitors": [
+     6,
+     8,
+     4
+    ],
+    "events": 10,
+    "quality": "good"
+   }
+  ],
+  "cam-03": [
+   {
+    "wall_s": 5.02,
+    "model_s": 4.26,
+    "in_tok": 1562,
+    "out_tok": 816,
+    "people": 12,
+    "zone_visitors": [
+     3,
+     2,
+     7
+    ],
+    "events": 4,
+    "quality": "fair: camera is handheld and moving forward, causing some mo"
+   },
+   {
+    "wall_s": 4.49,
+    "model_s": 3.69,
+    "in_tok": 1562,
+    "out_tok": 561,
+    "people": 12,
+    "zone_visitors": [
+     3,
+     2,
+     7
+    ],
+    "events": 5,
+    "quality": "fair (camera motion and distance from subjects make detailed"
+   },
+   {
+    "wall_s": 4.18,
+    "model_s": 3.41,
+    "in_tok": 1562,
+    "out_tok": 557,
+    "people": 12,
+    "zone_visitors": [
+     3,
+     2,
+     7
+    ],
+    "events": 5,
+    "quality": "fair: camera is handheld and moving, causing some motion blu"
+   }
+  ],
+  "cam-04": [
+   {
+    "wall_s": 5.21,
+    "model_s": 4.46,
+    "in_tok": 2153,
+    "out_tok": 596,
+    "people": 12,
+    "zone_visitors": [
+     6,
+     5,
+     4
+    ],
+    "events": 6,
+    "quality": "fair, due to significant camera motion as the operator walks"
+   },
+   {
+    "wall_s": 5.75,
+    "model_s": 4.95,
+    "in_tok": 2153,
+    "out_tok": 592,
+    "people": 12,
+    "zone_visitors": [
+     6,
+     5,
+     4
+    ],
+    "events": 6,
+    "quality": "fair, due to significant camera motion as the camera is bein"
+   },
+   {
+    "wall_s": 5.54,
+    "model_s": 4.54,
+    "in_tok": 2153,
+    "out_tok": 634,
+    "people": 12,
+    "zone_visitors": [
+     8,
+     6,
+     4
+    ],
+    "events": 7,
+    "quality": "fair, due to significant camera motion as the camera is bein"
+   }
+  ]
+ },
+ "ask": [
+  {
+   "q": "Which shelf reaches the most 18-35 shoppers on weekend evenings?",
+   "wall_s": 3.06,
+   "model_s": 1.46
+  },
+  {
+   "q": "Which shelves are under-priced for the attention they get?",
+   "wall_s": 2.76,
+   "model_s": 1.96
+  },
+  {
+   "q": "When should I staff the produce hall?",
+   "wall_s": 3.4,
+   "model_s": 1.74
+  },
+  {
+   "q": "What is the suggested rent for A28-L and why?",
+   "wall_s": 2.41,
+   "model_s": 1.57
+  },
+  {
+   "q": "Compare the end-caps in aisles 1, 6 and 28.",
+   "wall_s": 2.83,
+   "model_s": 1.87
+  }
+ ],
+ "store": [
+  0.806,
+  0.734,
+  0.752,
+  0.773,
+  0.796,
+  0.751,
+  0.754,
+  0.783,
+  0.793,
+  0.899
+ ],
+ "summary": {
+  "video_runs": 12,
+  "video_wall_median_s": 5.1850000000000005,
+  "video_wall_max_s": 7.28,
+  "video_in_tok_median": 2020.0,
+  "video_out_tok_median": 594.0,
+  "ask_wall_median_s": 2.83,
+  "ask_wall_max_s": 3.4,
+  "store_median_ms": 778,
+  "store_max_ms": 899,
+  "people_by_cam": {
+   "cam-01": [
+    3,
+    2,
+    2
+   ],
+   "cam-02": [
+    18,
+    18,
+    18
+   ],
+   "cam-03": [
+    12,
+    12,
+    12
+   ],
+   "cam-04": [
+    12,
+    12,
+    12
+   ]
+  }
+ }
+}
