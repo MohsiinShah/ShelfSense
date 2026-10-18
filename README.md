@@ -5,6 +5,8 @@
 Brands pay retailers for end-caps, eye-level slots and promotional bays, but that space is priced by position and negotiation, not by how many shoppers actually see it. ShelfSense watches store camera footage with Gemini, measures per shelf zone who walks past, who stops and who reaches, and turns that into a **Shelf Value Index (SVI)** and a suggested monthly rent for every shelf.
 
 - **Live prototype:** https://shelfsense-demo.web.app
+- **Demo video (3:23):** https://youtu.be/9HP-f7Th4XY
+- **Pitch deck:** [docs/ShelfSense-pitch-deck.pptx](docs/ShelfSense-pitch-deck.pptx)
 - **API (Cloud Run):** https://shelfsense-demo.web.app/api/health
 
 ![Architecture](docs/architecture.png)

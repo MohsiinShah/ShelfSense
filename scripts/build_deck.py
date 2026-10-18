@@ -130,8 +130,12 @@ def add_rel(n, rtype, target, external=False):
 
 
 _media = [0]
-def add_image(n, src, max_w=1800):
+def add_image(n, src, max_w=1800, crop_top=0.0, ratio=None):
     im = Image.open(src).convert("RGB")
+    if crop_top:
+        im = im.crop((0, int(im.height * crop_top), im.width, im.height))
+    if ratio:  # keep the top of the screen at this width:height
+        im = im.crop((0, 0, im.width, min(im.height, int(im.width / ratio))))
     if im.width > max_w:
         im = im.resize((max_w, round(im.height * max_w / im.width)), Image.LANCZOS)
     _media[0] += 1
@@ -209,7 +213,11 @@ cards = [
       "Only anonymous counts are kept; video is deleted after analysis."]),
 ]
 for i, (k, t, ls) in enumerate(cards):
-    append(4, card(X0 + i * (cw + gap), 1.35, cw, 3.55, t, ls, kicker=k, body_size=10.5))
+    append(4, card(X0 + i * (cw + gap), 1.35, cw, 2.55, t, ls, kicker=k, body_size=11))
+append(4, shape(X0, 4.08, X1 - X0, 0.85, "".join([
+    para([run("Market  ", 11, TEAL, FONT_SEMI), run("Modern retail chains in Pakistan (hypermarkets, supermarkets, pharmacies) and the FMCG brands that rent their shelves.", 10.5, INK)], space_after=3),
+    para([run("Model  ", 11, TEAL, FONT_SEMI), run("Retailers pay a per-store subscription to price their space; brands pay for reach and audience reports on their placements.", 10.5, INK)], space_after=0),
+]), fill=TEAL_SOFT, geom="roundRect", radius=8000, inset=0.14, anchor="ctr", name="Market"))
 
 # ---------------------------------------------------------------- slide 5: features
 feats = [
@@ -223,7 +231,7 @@ feats = [
 cw, ch = 2.93, 1.72
 for i, (t, d) in enumerate(feats):
     r, c = divmod(i, 3)
-    append(5, card(X0 + c * (cw + 0.24), 1.35 + r * (ch + 0.2), cw, ch, t, [d], kicker=f"0{i + 1}", body_size=10))
+    append(5, card(X0 + c * (cw + 0.24), 1.35 + r * (ch + 0.2), cw, ch, t, [d], kicker=f"0{i + 1}", body_size=11))
 
 # ---------------------------------------------------------------- slide 6: process flow + use cases
 steps = [("1  Capture", "Store camera clip, or upload"), ("2  Cloud Run", "API stores clip, builds zone prompt"),
@@ -241,7 +249,7 @@ uses = [("Retailer", ["Price end-caps and bays from evidence", "Staff the floor 
         ("FMCG brand", ["Choose shelves that reach its audience", "Verify reach and attention after launch", "Compare placements across stores"]),
         ("Store manager", ["Ask questions in plain language", "Weekly summary with one action", "Spot under-priced shelves"])]
 for i, (t, ls) in enumerate(uses):
-    append(6, card(X0 + i * (2.93 + 0.24), 2.95, 2.93, 1.95, t, ["• " + l for l in ls], body_size=10.5))
+    append(6, card(X0 + i * (2.93 + 0.24), 2.95, 2.93, 1.7, t, ["• " + l for l in ls], body_size=11))
 
 # ---------------------------------------------------------------- slide 7: wireframes (real screens)
 rid_a, ra = add_image(7, ROOT / "docs/screenshots/2-floor.png")
@@ -254,7 +262,7 @@ for j, (rid, r, cap) in enumerate([(rid_a, ra, "Floor heatmap + shelf detail: ho
     append(7, shape(x, 4.38, w, 0.5, para(run(cap, 10, MUTED), align="ctr"), name="Caption", inset=0.02))
 
 # ---------------------------------------------------------------- slide 8: architecture
-rid, r = add_image(8, ROOT / "docs/architecture.png", max_w=2400)
+rid, r = add_image(8, ROOT / "docs/architecture.png", max_w=2400, crop_top=0.17)
 bx, by, bw, bh = fit(r, X0, 1.22, X1 - X0, 3.75)
 append(8, picture(rid, bx, by, bw, bh, "ShelfSense architecture diagram", border=False))
 
@@ -302,7 +310,7 @@ shots = [("4-live.png", "Live analysis: Gemini counts per zone with a clickable 
 w, h = (X1 - X0 - 0.25) / 2, 1.62
 for i, (f, cap) in enumerate(shots):
     r_, c = divmod(i, 2)
-    rid, ratio = add_image(11, ROOT / "docs/screenshots" / f, max_w=1600)
+    rid, ratio = add_image(11, ROOT / "docs/screenshots" / f, max_w=1600, ratio=2.3)
     x, y = X0 + c * (w + 0.25), 1.25 + r_ * (h + 0.38)
     bx, by, bw, bh = fit(ratio, x, y, w, h)
     append(11, picture(rid, bx, by, bw, bh, cap))
@@ -310,7 +318,7 @@ for i, (f, cap) in enumerate(shots):
 
 # ---------------------------------------------------------------- slide 12: performance
 stats = [(f"{BENCH['video_wall_median_s']:.1f} s", "Gemini video analysis", f"median, end to end · worst {BENCH['video_wall_max_s']:.1f} s"),
-         (f"{BENCH['ask_wall_median_s']:.1f} s", "Ask ShelfSense answer", f"median of 5 questions · worst {BENCH['ask_wall_max_s']:.1f} s"),
+         (f"{BENCH['ask_wall_median_s']:.1f} s", "Ask ShelfSense answer", f"5 questions · worst {BENCH['ask_wall_max_s']:.1f} s"),
          (f"{BENCH['store_median_ms'] / 1000:.2f} s", "Dashboard API", "median /store response, 10 calls"),
          ("12 / 12", "Schema-valid results", "every video run parsed into the JSON schema")]
 for i, (v, l, n) in enumerate(stats):
@@ -335,8 +343,8 @@ phases = [("PILOT · MONTHS 1–3", "One chain, 3–5 stores", ["In-store edge b
           ("PRODUCT · MONTHS 4–9", "Multi-store platform", ["Firebase Auth with retailer / brand tenants", "Brand portal and automated reach reports", "Store-manager mobile app"]),
           ("SCALE · MONTHS 10–18", "Marketplace", ["More chains, cross-chain brand benchmarks", "Book shelf space at the suggested price", "Export to similar emerging markets"])]
 for i, (k, t, ls) in enumerate(phases):
-    append(13, card(X0 + i * (2.93 + 0.24), 1.35, 2.93, 3.0, t, ["• " + l for l in ls], kicker=k, body_size=10.5))
-append(13, shape(X0, 4.5, 9.2, 0.5, para(run("Privacy roadmap: no face images or embeddings, no tracking across days or stores, signage in store, and a DPIA before the pilot. "
+    append(13, card(X0 + i * (2.93 + 0.24), 1.35, 2.93, 2.45, t, ["• " + l for l in ls], kicker=k, body_size=11))
+append(13, shape(X0, 3.98, 9.2, 0.6, para(run("Privacy roadmap: no face images or embeddings, no tracking across days or stores, signage in store, and a DPIA before the pilot. "
                                                "We design to GDPR-style principles while Pakistan's data-protection bill is still a draft.", 9.5, MUTED), line=110000), name="Note", inset=0.02))
 
 # ---------------------------------------------------------------- slide 14: links
@@ -357,13 +365,18 @@ use = [("Gemini", "Gemini 3 Flash on Vertex AI watches each store clip and retur
        ("Firebase", "Firebase Hosting serves the dashboard at shelfsense-demo.web.app and rewrites /api/** to Cloud Run, so the whole product runs on one origin.")]
 for i, (t, d) in enumerate(use):
     r_, c = divmod(i, 2)
-    append(15, card(X0 + c * (4.5 + 0.24), 1.35 + r_ * (1.75 + 0.18), 4.5, 1.75, t, [d], title_size=13, body_size=10, fill=TEAL_SOFT if i % 3 == 0 else CARD))
+    append(15, card(X0 + c * (4.5 + 0.24), 1.35 + r_ * (1.75 + 0.18), 4.5, 1.75, t, [d], title_size=13, body_size=11, fill=TEAL_SOFT if i % 3 == 0 else CARD))
 
 # ---------------------------------------------------------------- remove the organiser's instruction slide (slide 2)
 pres = (P / "presentation.xml").read_text()
 rels = (P / "_rels" / "presentation.xml.rels").read_text()
 rid2 = re.search(r'Id="(rId\d+)"[^>]*Target="slides/slide2.xml"', rels) or re.search(r'Target="slides/slide2.xml"[^>]*Id="(rId\d+)"', rels)
 pres = re.sub(r'<p:sldId [^>]*r:id="' + rid2.group(1) + r'"/>', "", pres)
+r14 = re.search(r'Id="(rId\d+)"[^>]*Target="slides/slide14.xml"', rels).group(1)
+r15 = re.search(r'Id="(rId\d+)"[^>]*Target="slides/slide15.xml"', rels).group(1)
+s14 = re.search(r'<p:sldId [^>]*r:id="' + r14 + r'"/>', pres).group(0)
+s15 = re.search(r'<p:sldId [^>]*r:id="' + r15 + r'"/>', pres).group(0)
+pres = pres.replace(s14, "@@14@@").replace(s15, s14).replace("@@14@@", s15)
 (P / "presentation.xml").write_text(pres)
 
 # Drop the now-orphaned slide parts, then zip with [Content_Types].xml first.
